@@ -94,7 +94,7 @@ const AllMembers = () => {
     if (window.confirm('Are you sure you want to delete this member?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`/api/users/${id}`, {
+        await axios.delete(`http://localhost:3000/api/users/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -344,7 +344,7 @@ const AllMembers = () => {
                       </Link>
                       <button
                         onClick={() => deleteMember(member._id)}
-                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
                         title="Delete"
                       >
                         <FiTrash2 size={16} />

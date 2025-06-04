@@ -16,6 +16,8 @@ import Invoices from "./pages/Invoices/Invoices.jsx"
 import Reports from './pages/Reports/Reports.jsx';
 import SettingsPage from './pages/SettingsPage/SettingsPage.jsx'
 
+import EditMember  from './pages/Team/EditMember.jsx'
+
 
 
 function App() {
@@ -31,6 +33,10 @@ function App() {
         <Route path="/team/all-members" element={<ProtectedRoute><Layout><AllMembers /></Layout></ProtectedRoute>} />
         <Route path="/team/add" element={<ProtectedRoute><Layout><AddMember /></Layout></ProtectedRoute>} />
         <Route path="/team/roles" element={<ProtectedRoute><Layout><Roles /></Layout></ProtectedRoute>} />
+        <Route path="/team/edit/:id" element={<ProtectedRoute><Layout><EditMember /></Layout></ProtectedRoute>} />
+
+
+
         <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute><Layout><Invoices /></Layout></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute><Layout><Reports /></Layout></ProtectedRoute>} />
