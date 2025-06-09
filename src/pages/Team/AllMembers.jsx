@@ -38,6 +38,8 @@ const AllMembers = () => {
           }
         });
 
+        console.log(response.data)
+
         if (response.data && response.data.data) {
           setMembers(response.data.data);
         } else {
@@ -55,7 +57,7 @@ const AllMembers = () => {
   }, []);
 
   // Get unique roles for filter dropdown
-  const roles = ['All', ...new Set(members.map(member => member.role))];
+  const roles = ['All', ...new Set(members.map(member => member.role?.name || 'No role'))];
   const statuses = ['All', 'Active', 'Inactive', 'On Leave'];
 
   // Filter and sort members based on user selections
@@ -63,22 +65,37 @@ const AllMembers = () => {
     .filter(member => {
       const matchesSearch = member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = filterRole === 'All' || member.role === filterRole;
+      const matchesRole = filterRole === 'All' || member.role?.name === filterRole;
       const matchesStatus = filterStatus === 'All' || member.status === filterStatus;
       return matchesSearch && matchesRole && matchesStatus;
     })
-    .sort((a, b) => {
-      const aValue = a[sortConfig.key] || '';
-      const bValue = b[sortConfig.key] || '';
+  .sort((a, b) => {
+    if (sortConfig.key === 'role') {
+      // Compare role names for sorting
+      const aRole = a.role?.name || '';
+      const bRole = b.role?.name || '';
       
-      if (aValue < bValue) {
+      if (aRole < bRole) {
         return sortConfig.direction === 'asc' ? -1 : 1;
       }
-      if (aValue > bValue) {
+      if (aRole > bRole) {
         return sortConfig.direction === 'asc' ? 1 : -1;
       }
       return 0;
-    });
+    }
+    
+    // Existing sorting for other fields
+    const aValue = a[sortConfig.key] || '';
+    const bValue = b[sortConfig.key] || '';
+    
+    if (aValue < bValue) {
+      return sortConfig.direction === 'asc' ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return sortConfig.direction === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
 
   // Handle sorting when column header is clicked
   const requestSort = (key) => {
@@ -170,7 +187,7 @@ const AllMembers = () => {
               onChange={(e) => setFilterRole(e.target.value)}
             >
               {roles.map(role => (
-                <option key={role} value={role}>{role}</option>
+                <option key={role._id} value={role.name}>{role.name}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -305,7 +322,7 @@ const AllMembers = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {member.role ? (
                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {member.role}
+                        {member.role.name}
                       </span>
                     ) : (
                       <span className="text-xs text-gray-400">Not specified</span>

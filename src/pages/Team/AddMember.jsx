@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FiUser,
@@ -12,10 +12,9 @@ import {
   FiCheckCircle,
   FiXCircle
 } from 'react-icons/fi';
-import axios from 'axios'
+import axios from 'axios';
 
 const AddMember = () => {
-
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -23,17 +22,38 @@ const AddMember = () => {
     email: '',
     phone: '',
     role: 'Developer',
+    department: 'Engineering',
     status: 'Active',
     joinDate: new Date().toISOString().split('T')[0],
     password: '',
     confirmPassword: ''
   });
 
+  const [roles, setRoles] = useState([
+    'Developer', 
+    'Designer', 
+    'Project Manager', 
+    'QA Engineer', 
+    'Marketing', 
+    'Sales', 
+    'Administrator'
+  ]);
+
+  const [departments, setDepartments] = useState([
+    'Engineering',
+    'Design',
+    'Product',
+    'Marketing',
+    'Sales',
+    'Support',
+    'HR',
+    'Admin'
+  ]);
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const roles = ['Developer', 'Designer', 'Project Manager', 'QA Engineer', 'Marketing', 'Sales'];
   const statuses = ['Active', 'Inactive', 'On Leave'];
 
   const handleChange = (e) => {
@@ -60,6 +80,8 @@ const AddMember = () => {
       newErrors.email = 'Email is invalid';
     }
     if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
+    if (!formData.role) newErrors.role = 'Role is required';
+    if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
@@ -81,31 +103,54 @@ const AddMember = () => {
     setIsSubmitting(true);
     
     try {
-      const token = localStorage.getItem("token")
-
-      if(!token){
-        throw new Error("No Authentication Token Found")
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
 
-      const request = await axios.post("http://localhost:3000/api/users/adduser", formData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      // const response = request.data
+      const requestData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        department: formData.department,
+        status: formData.status,
+        joinDate: formData.joinDate,
+        password: formData.password
+      };
 
-      console.log('Form data to submit:', formData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await axios.post(
+        'http://localhost:3000/api/users/adduser',
+        requestData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
       setSubmitSuccess(true);
       setTimeout(() => {
         navigate('/team/all-members');
       }, 1500);
     } catch (error) {
       console.error('Error adding member:', error);
+      let errorMessage = 'Failed to add member. Please try again.';
+      
+      if (error.response) {
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.status === 401) {
+          errorMessage = 'Unauthorized. Please login again.';
+        } else if (error.response.status === 400) {
+          errorMessage = 'Invalid data. Please check your inputs.';
+        }
+      }
+
       setErrors({
         ...errors,
-        apiError: 'Failed to add member. Please try again.'
+        apiError: errorMessage
       });
     } finally {
       setIsSubmitting(false);
@@ -226,7 +271,7 @@ const AddMember = () => {
               
               <div>
                 <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Role
+                  Role <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -237,13 +282,37 @@ const AddMember = () => {
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="pl-10 w-full rounded-lg border border-gray-200 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 py-2.5 text-gray-900"
+                    className={`pl-10 w-full rounded-lg border ${errors.role ? 'border-red-300' : 'border-gray-200'} bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 py-2.5 text-gray-900`}
                   >
                     {roles.map((role) => (
                       <option key={role} value={role}>{role}</option>
                     ))}
                   </select>
                 </div>
+                {errors.role && <p className="mt-1 text-sm text-red-500">{errors.role}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Department <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiBriefcase className="text-gray-400" size={18} />
+                  </div>
+                  <select
+                    id="department"
+                    name="department"
+                    value={formData.department}
+                    onChange={handleChange}
+                    className={`pl-10 w-full rounded-lg border ${errors.department ? 'border-red-300' : 'border-gray-200'} bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 py-2.5 text-gray-900`}
+                  >
+                    {departments.map((department) => (
+                      <option key={department} value={department}>{department}</option>
+                    ))}
+                  </select>
+                </div>
+                {errors.department && <p className="mt-1 text-sm text-red-500">{errors.department}</p>}
               </div>
               
               <div>
