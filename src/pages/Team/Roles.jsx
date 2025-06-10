@@ -17,6 +17,7 @@ import {
   FiLayers,
   FiUsers
 } from 'react-icons/fi';
+import { Menu  } from '@headlessui/react'
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
@@ -216,20 +217,44 @@ const Roles = () => {
             className="pl-11 pr-4 h-12 block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
           />
         </div>
-        <div className="relative w-full md:w-48">
-          <select
-            value={departmentFilter}
-            onChange={(e) => setDepartmentFilter(e.target.value)}
-            className="appearance-none pl-3 pr-8 h-12 block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
-          >
-            {departments.map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <FiChevronDown className="text-gray-400" />
-          </div>
-        </div>
+
+<Menu as="div" className="relative w-full md:w-48">
+  {({ open }) => (
+    <>
+      <Menu.Button className="cursor-pointer flex justify-between items-center pl-4 pr-3 h-12 w-full rounded-xl border border-gray-200 bg-white shadow-sm hover:border-indigo-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 text-left">
+        <span className="truncate">{departmentFilter}</span>
+        <FiChevronDown 
+          className={`ml-2 h-5 w-5 text-gray-400 transition-transform duration-200 ${
+            open ? 'transform rotate-180 text-indigo-500' : ''
+          }`} 
+        />
+      </Menu.Button>
+      
+      <Menu.Items className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-xl py-1 ring-1 ring-black ring-opacity-5 focus:outline-none max-h-60 overflow-auto">
+        {departments.map((dept) => (
+          <Menu.Item key={dept}>
+            {({ active }) => (
+              <button
+                onClick={() => setDepartmentFilter(dept)}
+                className={`${
+                  active ? 'bg-indigo-50 text-indigo-800' : 'text-gray-700'
+                } cursor-pointer flex items-center px-4 py-2.5 text-sm w-full text-left transition-colors duration-150 ${
+                  departmentFilter === dept ? 'font-medium bg-indigo-100/50' : ''
+                }`}
+              >
+                {dept}
+                {departmentFilter === dept && (
+                  <FiCheckCircle className="ml-auto h-4 w-4 text-indigo-600" />
+                )}
+              </button>
+            )}
+          </Menu.Item>
+        ))}
+      </Menu.Items>
+    </>
+  )}
+</Menu>
+
       </div>
 
       {/* Roles Table */}
@@ -353,7 +378,7 @@ const Roles = () => {
             <button
               onClick={() => paginate(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+              className="cursor-pointer p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
               aria-label="Previous page"
             >
               <FiChevronLeft size={18} />
@@ -362,7 +387,7 @@ const Roles = () => {
               <button
                 key={number}
                 onClick={() => paginate(number)}
-                className={`w-11 h-11 rounded-xl border transition-all duration-200 shadow-sm ${
+                className={`cursor-pointer w-11 h-11 rounded-xl border transition-all duration-200 shadow-sm ${
                   currentPage === number
                     ? 'bg-indigo-600 text-white border-indigo-600'
                     : 'border-gray-200 hover:bg-gray-50'
@@ -375,7 +400,7 @@ const Roles = () => {
             <button
               onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className="p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+              className="cursor-pointer p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
               aria-label="Next page"
             >
               <FiChevronRight size={18} />
