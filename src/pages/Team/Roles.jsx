@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import {
   FiPlus,
   FiEdit2,
@@ -18,70 +19,9 @@ import {
 } from 'react-icons/fi';
 
 const Roles = () => {
-  // Enhanced roles data structure for agency CRM
-  const [roles, setRoles] = useState([
-    {
-      id: 1,
-      name: 'Administrator',
-      description: 'Full system access and settings management',
-      memberCount: 2,
-      department: 'Management',
-      permissions: ['all'],
-      createdAt: '2023-01-15',
-      isSystemRole: true
-    },
-    {
-      id: 2,
-      name: 'Project Manager',
-      description: 'Oversees project execution and team coordination',
-      memberCount: 4,
-      department: 'Management',
-      permissions: ['projects:full', 'reports:view', 'team:manage'],
-      createdAt: '2023-03-10',
-      isSystemRole: false
-    },
-    {
-      id: 3,
-      name: 'Senior Developer',
-      description: 'Leads technical implementation and code reviews',
-      memberCount: 5,
-      department: 'Engineering',
-      permissions: ['code:push', 'reviews:create', 'tasks:update'],
-      createdAt: '2023-02-20',
-      isSystemRole: false
-    },
-    {
-      id: 4,
-      name: 'UX Designer',
-      description: 'Creates user interfaces and experience flows',
-      memberCount: 3,
-      department: 'Design',
-      permissions: ['design:create', 'prototypes:manage', 'feedback:review'],
-      createdAt: '2023-04-05',
-      isSystemRole: false
-    },
-    {
-      id: 5,
-      name: 'QA Engineer',
-      description: 'Ensures software quality through testing',
-      memberCount: 4,
-      department: 'Engineering',
-      permissions: ['tests:create', 'bugs:report', 'releases:verify'],
-      createdAt: '2023-05-12',
-      isSystemRole: false
-    },
-    {
-      id: 6,
-      name: 'Account Manager',
-      description: 'Manages client relationships and communications',
-      memberCount: 3,
-      department: 'Sales',
-      permissions: ['clients:manage', 'invoices:view'],
-      createdAt: '2023-06-18',
-      isSystemRole: false
-    }
-  ]);
-
+  const [roles, setRoles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -90,6 +30,53 @@ const Roles = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All');
   const rolesPerPage = 5;
+
+  // Fetch roles from backend
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const token = localStorage.getItem('token');
+
+        const [userResponse, rolesResponse] = await Promise.all([
+          axios.get(`http://localhost:3000/api/users/allusers`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:3000/api/roles', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+        ]);
+
+        // Create a map to count users per role
+        const roleUserCount = {};
+        userResponse.data.data.forEach(user => {
+          const roleId = user.role?._id;
+          if (roleId) {
+            roleUserCount[roleId] = (roleUserCount[roleId] || 0) + 1;
+          }
+        });
+
+        // Transform data to match frontend expectations
+        const transformedRoles = rolesResponse.data.data.map(role => ({
+          id: role._id,
+          name: role.name,
+          description: role.description,
+          memberCount: roleUserCount[role._id] || 0,
+          department: role.department?.name || 'Unassigned',
+          permissions: role.permissions,
+          createdAt: role.createdAt,
+          isSystemRole: role.isDefault
+        }));
+
+        setRoles(transformedRoles);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoles();
+  }, []);
 
   // Get unique departments for filter
   const departments = ['All', ...new Set(roles.map(role => role.department))];
@@ -102,10 +89,15 @@ const Roles = () => {
     return matchesSearch && matchesDepartment;
   });
 
+  // Sort roles by name A-Z
+  const sortedRoles = [...filteredRoles].sort((a, b) => 
+    a.name.localeCompare(b.name)
+  );
+
   // Pagination logic
   const indexOfLastRole = currentPage * rolesPerPage;
   const indexOfFirstRole = indexOfLastRole - rolesPerPage;
-  const currentRoles = filteredRoles.slice(indexOfFirstRole, indexOfLastRole);
+  const currentRoles = sortedRoles.slice(indexOfFirstRole, indexOfLastRole);
   const totalPages = Math.ceil(filteredRoles.length / rolesPerPage);
 
   // Role icon mapping
@@ -113,10 +105,11 @@ const Roles = () => {
     switch(roleName) {
       case 'Administrator': return <FiShield className="text-purple-600" />;
       case 'Project Manager': return <FiUsers className="text-blue-600" />;
-      case 'Senior Developer': 
+      case 'Developer': 
       case 'QA Engineer': return <FiCode className="text-green-600" />;
-      case 'UX Designer': return <FiLayers className="text-orange-600" />;
-      case 'Account Manager': return <FiUsers className="text-red-600" />;
+      case 'Designer': return <FiLayers className="text-orange-600" />;
+      case 'Marketing':
+      case 'Sales': return <FiUsers className="text-red-600" />;
       default: return <FiUsers className="text-gray-600" />;
     }
   };
@@ -131,7 +124,7 @@ const Roles = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedRole.isSystemRole) {
       setSuccessMessage('System roles cannot be deleted');
       setShowSuccess(true);
@@ -140,11 +133,16 @@ const Roles = () => {
       return;
     }
 
-    setRoles(roles.filter(role => role.id !== selectedRole.id));
-    setShowDeleteModal(false);
-    setSuccessMessage(`Role "${selectedRole.name}" deleted successfully`);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
+    try {
+      await axios.delete(`http://localhost:3000/api/roles/${selectedRole.id}`);
+      setRoles(roles.filter(role => role.id !== selectedRole.id));
+      setShowDeleteModal(false);
+      setSuccessMessage(`Role "${selectedRole.name}" deleted successfully`);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+    }
   };
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -154,6 +152,26 @@ const Roles = () => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-8 max-w-7xl mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-8 max-w-7xl mx-auto">
+        <div className="p-4 bg-red-50 text-red-700 rounded-xl border border-red-200">
+          <p className="font-medium">Error loading roles: {error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-8 max-w-7xl mx-auto">
@@ -176,7 +194,7 @@ const Roles = () => {
 
       {/* Success Message */}
       {showSuccess && (
-        <div className="mb-6 p-4 bg-emerging-50/90 text-emerald-800 rounded-xl flex items-center gap-3 border border-emerald-200 backdrop-blur-sm">
+        <div className="mb-6 p-4 bg-emerald-50/90 text-emerald-800 rounded-xl flex items-center gap-3 border border-emerald-200 backdrop-blur-sm">
           <FiCheckCircle size={20} className="text-emerald-600 flex-shrink-0" />
           <div>
             <p className="font-medium">{successMessage}</p>
