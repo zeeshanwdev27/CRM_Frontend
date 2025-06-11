@@ -18,6 +18,7 @@ import Roles from './pages/Team/Roles.jsx';
 import CreateRole from './pages/Team/CreateRole.jsx';
 
 import EditMember  from './pages/Team/EditMember.jsx'
+import EditRole from './pages/Team/EditRole.jsx';
 
 
 
@@ -36,6 +37,7 @@ function App() {
         <Route path="/team/roles" element={<ProtectedRoute><Layout><Roles /></Layout></ProtectedRoute>} />
         <Route path="/team/roles/add" element={<ProtectedRoute><Layout><CreateRole /></Layout></ProtectedRoute>} />
         <Route path="/team/edit/:id" element={<ProtectedRoute><Layout><EditMember /></Layout></ProtectedRoute>} />
+        <Route path="/team/roles/edit/:id" element={<ProtectedRoute><Layout><EditRole /></Layout></ProtectedRoute>} />
 
 
 

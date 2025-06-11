@@ -63,8 +63,8 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
       path: '/team',
       submenu: [
         { name: 'All Members', path: '/team/all-members' },
-        { name: 'Add New', path: '/team/add' },
-        { name: 'Roles', path: '/team/roles' }
+        { name: 'Add Member', path: '/team/add' },
+        { name: 'All Roles', path: '/team/roles' }
       ]
     },
     { name: 'Tasks', icon: <FiCalendar size={20} />, path: '/tasks' },
