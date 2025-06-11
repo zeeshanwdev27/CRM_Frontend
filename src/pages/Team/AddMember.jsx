@@ -21,40 +21,74 @@ const AddMember = () => {
     name: '',
     email: '',
     phone: '',
-    role: 'Developer',
-    department: 'Engineering',
+    role: '',
+    department: '',
     status: 'Active',
     joinDate: new Date().toISOString().split('T')[0],
     password: '',
     confirmPassword: ''
   });
 
-  const [roles, setRoles] = useState([
-    'Developer', 
-    'Designer', 
-    'Project Manager', 
-    'QA Engineer', 
-    'Marketing', 
-    'Sales', 
-    'Administrator'
-  ]);
-
-  const [departments, setDepartments] = useState([
-    'Engineering',
-    'Design',
-    'Product',
-    'Marketing',
-    'Sales',
-    'Support',
-    'HR',
-    'Admin'
-  ]);
-
+  const [roles, setRoles] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const statuses = ['Active', 'Inactive', 'On Leave'];
+
+  useEffect(() => {
+    const fetchRolesAndDepartments = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const [rolesResponse, departmentsResponse] = await Promise.all([
+          axios.get('http://localhost:3000/api/roles', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }),
+          axios.get('http://localhost:3000/api/departments', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+        ]);
+
+        setRoles(rolesResponse.data.data);
+        setDepartments(departmentsResponse.data.data);
+        
+        // Set default values if arrays are not empty
+        if (rolesResponse.data.data.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            role: rolesResponse.data.data[0].name
+          }));
+        }
+        
+        if (departmentsResponse.data.data.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            department: departmentsResponse.data.data[0].name
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching roles and departments:', error);
+        setErrors({
+          ...errors,
+          apiError: 'Failed to load roles and departments. Please try again later.'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRolesAndDepartments();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -156,6 +190,14 @@ const AddMember = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -313,7 +355,7 @@ const AddMember = () => {
                       className={`block w-full pl-10 pr-3 py-2.5 rounded-lg border ${errors.role ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} shadow-sm appearance-none bg-white`}
                     >
                       {roles.map((role) => (
-                        <option key={role} value={role}>{role}</option>
+                        <option key={role._id} value={role.name}>{role.name}</option>
                       ))}
                     </select>
                   </div>
@@ -337,7 +379,7 @@ const AddMember = () => {
                       className={`block w-full pl-10 pr-3 py-2.5 rounded-lg border ${errors.department ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'} shadow-sm appearance-none bg-white`}
                     >
                       {departments.map((department) => (
-                        <option key={department} value={department}>{department}</option>
+                        <option key={department._id} value={department.name}>{department.name}</option>
                       ))}
                     </select>
                   </div>

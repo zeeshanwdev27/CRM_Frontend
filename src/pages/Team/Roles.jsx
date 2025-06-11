@@ -125,26 +125,31 @@ const Roles = () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (selectedRole.isSystemRole) {
-      setSuccessMessage('System roles cannot be deleted');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      setShowDeleteModal(false);
-      return;
-    }
+const confirmDelete = async () => {
+  if (selectedRole.isSystemRole) {
+    setSuccessMessage('System roles cannot be deleted');
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+    setShowDeleteModal(false);
+    return;
+  }
 
-    try {
-      await axios.delete(`http://localhost:3000/api/roles/${selectedRole.id}`);
-      setRoles(roles.filter(role => role.id !== selectedRole.id));
-      setShowDeleteModal(false);
-      setSuccessMessage(`Role "${selectedRole.name}" deleted successfully`);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-    }
-  };
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`http://localhost:3000/api/roles/${selectedRole.id}`, {
+      headers: { 
+        'Authorization': `Bearer ${token}` 
+      }
+    });
+    setRoles(roles.filter(role => role.id !== selectedRole.id));
+    setShowDeleteModal(false);
+    setSuccessMessage(`Role "${selectedRole.name}" deleted successfully`);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  } catch (err) {
+    setError(err.response?.data?.message || err.message);
+  }
+};
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -184,7 +189,7 @@ const Roles = () => {
         </div>
         <div className="flex gap-3">
           <Link
-            to="/roles/add"
+            to="/team/roles/add"
             className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
           >
             <FiPlus size={18} />

@@ -12,7 +12,11 @@ import {
   FiChevronUp,
   FiMail,
   FiPhone,
-  FiClock
+  FiClock,
+  FiChevronLeft,
+  FiChevronRight,
+  FiCheckCircle,
+  FiXCircle
 } from 'react-icons/fi';
 
 const AllMembers = () => {
@@ -23,6 +27,14 @@ const AllMembers = () => {
   const [filterRole, setFilterRole] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const membersPerPage = 10;
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -37,8 +49,6 @@ const AllMembers = () => {
             'Authorization': `Bearer ${token}`
           }
         });
-
-        console.log(response.data)
 
         if (response.data && response.data.data) {
           setMembers(response.data.data);
@@ -69,33 +79,37 @@ const AllMembers = () => {
       const matchesStatus = filterStatus === 'All' || member.status === filterStatus;
       return matchesSearch && matchesRole && matchesStatus;
     })
-  .sort((a, b) => {
-    if (sortConfig.key === 'role') {
-      // Compare role names for sorting
-      const aRole = a.role?.name || '';
-      const bRole = b.role?.name || '';
+    .sort((a, b) => {
+      if (sortConfig.key === 'role') {
+        const aRole = a.role?.name || '';
+        const bRole = b.role?.name || '';
+        
+        if (aRole < bRole) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aRole > bRole) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      }
       
-      if (aRole < bRole) {
+      const aValue = a[sortConfig.key] || '';
+      const bValue = b[sortConfig.key] || '';
+      
+      if (aValue < bValue) {
         return sortConfig.direction === 'asc' ? -1 : 1;
       }
-      if (aRole > bRole) {
+      if (aValue > bValue) {
         return sortConfig.direction === 'asc' ? 1 : -1;
       }
       return 0;
-    }
-    
-    // Existing sorting for other fields
-    const aValue = a[sortConfig.key] || '';
-    const bValue = b[sortConfig.key] || '';
-    
-    if (aValue < bValue) {
-      return sortConfig.direction === 'asc' ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortConfig.direction === 'asc' ? 1 : -1;
-    }
-    return 0;
-  });
+    });
+
+  // Pagination logic
+  const indexOfLastMember = currentPage * membersPerPage;
+  const indexOfFirstMember = indexOfLastMember - membersPerPage;
+  const currentMembers = filteredMembers.slice(indexOfFirstMember, indexOfLastMember);
+  const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
 
   // Handle sorting when column header is clicked
   const requestSort = (key) => {
@@ -107,22 +121,31 @@ const AllMembers = () => {
   };
 
   // Handle member deletion
-  const deleteMember = async (id) => {
-    if (window.confirm('Are you sure you want to delete this member?')) {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:3000/api/users/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        setMembers(members.filter(member => member._id !== id));
-      } catch (err) {
-        console.error('Error deleting member:', err);
-        setError(err.response?.data?.message || err.message || 'Failed to delete member');
-      }
+  const handleDeleteClick = (member) => {
+    setSelectedMember(member);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:3000/api/users/${selectedMember._id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setMembers(members.filter(member => member._id !== selectedMember._id));
+      setShowDeleteModal(false);
+      setSuccessMessage(`Member "${selectedMember.name}" deleted successfully`);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error deleting member:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to delete member');
     }
   };
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   if (loading) {
     return (
@@ -164,6 +187,16 @@ const AllMembers = () => {
         </div>
       </div>
 
+      {/* Success Message */}
+      {showSuccess && (
+        <div className="mb-6 p-4 bg-emerald-50/90 text-emerald-800 rounded-xl flex items-center gap-3 border border-emerald-200 backdrop-blur-sm">
+          <FiCheckCircle size={20} className="text-emerald-600 flex-shrink-0" />
+          <div>
+            <p className="font-medium">{successMessage}</p>
+          </div>
+        </div>
+      )}
+
       {/* Filters and Search */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
@@ -187,7 +220,7 @@ const AllMembers = () => {
               onChange={(e) => setFilterRole(e.target.value)}
             >
               {roles.map(role => (
-                <option key={role._id} value={role.name}>{role.name}</option>
+                <option key={role} value={role}>{role}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -282,8 +315,8 @@ const AllMembers = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredMembers.length > 0 ? (
-              filteredMembers.map((member) => (
+            {currentMembers.length > 0 ? (
+              currentMembers.map((member) => (
                 <tr key={member._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -360,7 +393,7 @@ const AllMembers = () => {
                         <FiEdit2 size={16} />
                       </Link>
                       <button
-                        onClick={() => deleteMember(member._id)}
+                        onClick={() => handleDeleteClick(member)}
                         className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 cursor-pointer"
                         title="Delete"
                       >
@@ -380,6 +413,89 @@ const AllMembers = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {filteredMembers.length > membersPerPage && (
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+          <div className="text-sm text-gray-500">
+            Showing <span className="font-medium">{indexOfFirstMember + 1}</span> to{' '}
+            <span className="font-medium">
+              {Math.min(indexOfLastMember, filteredMembers.length)}
+            </span>{' '}
+            of <span className="font-medium">{filteredMembers.length}</span> members
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => paginate(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="cursor-pointer p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              aria-label="Previous page"
+            >
+              <FiChevronLeft size={18} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+              <button
+                key={number}
+                onClick={() => paginate(number)}
+                className={`cursor-pointer w-10 h-10 rounded-lg border transition-all duration-200 ${
+                  currentPage === number
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'border-gray-200 hover:bg-gray-50'
+                }`}
+                aria-label={`Page ${number}`}
+              >
+                {number}
+              </button>
+            ))}
+            <button
+              onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="cursor-pointer p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              aria-label="Next page"
+            >
+              <FiChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full animate-scale-in">
+            <div className="flex items-start gap-4 mb-5">
+              <div className="p-3 rounded-full bg-rose-100 mt-0.5">
+                <FiXCircle size={24} className="text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Delete Member</h3>
+                <p className="text-gray-600 mt-2">
+                  Are you sure you want to delete the member "{selectedMember?.name}"? This action cannot be undone.
+                </p>
+                {selectedMember?.role && (
+                  <div className="mt-3 p-3 bg-amber-50 text-amber-800 rounded-lg text-sm">
+                    This will permanently remove the member from the system.
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-5 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-all duration-200 shadow-sm"
+              >
+                Delete Member
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

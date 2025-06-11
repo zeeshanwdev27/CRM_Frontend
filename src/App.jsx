@@ -10,11 +10,12 @@ import Contacts from "./pages/Contacts/Contacts.jsx"
 import AllProjects from './pages/Projects/AllProject.jsx';
 import AllMembers from './pages/Team/Allmembers.jsx';
 import AddMember from './pages/Team/AddMember.jsx';
-import Roles from './pages/Team/Roles.jsx';
 import Tasks from './pages/Tasks/Tasks.jsx';
 import Invoices from "./pages/Invoices/Invoices.jsx"
 import Reports from './pages/Reports/Reports.jsx';
 import SettingsPage from './pages/SettingsPage/SettingsPage.jsx'
+import Roles from './pages/Team/Roles.jsx';
+import CreateRole from './pages/Team/CreateRole.jsx';
 
 import EditMember  from './pages/Team/EditMember.jsx'
 
@@ -33,6 +34,7 @@ function App() {
         <Route path="/team/all-members" element={<ProtectedRoute><Layout><AllMembers /></Layout></ProtectedRoute>} />
         <Route path="/team/add" element={<ProtectedRoute><Layout><AddMember /></Layout></ProtectedRoute>} />
         <Route path="/team/roles" element={<ProtectedRoute><Layout><Roles /></Layout></ProtectedRoute>} />
+        <Route path="/team/roles/add" element={<ProtectedRoute><Layout><CreateRole /></Layout></ProtectedRoute>} />
         <Route path="/team/edit/:id" element={<ProtectedRoute><Layout><EditMember /></Layout></ProtectedRoute>} />
 
 
