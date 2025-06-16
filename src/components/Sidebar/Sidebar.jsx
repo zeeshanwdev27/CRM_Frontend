@@ -63,7 +63,7 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
       path: '/team',
       submenu: [
         { name: 'All Members', path: '/team/all-members' },
-        { name: 'Add Member', path: '/team/add' },
+        // { name: 'Add Member', path: '/team/add' },
         { name: 'All Roles', path: '/team/roles' }
       ]
     },

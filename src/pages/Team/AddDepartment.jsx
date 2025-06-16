@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FiPlus, FiX, FiCheckCircle, FiTrash2, FiChevronDown } from "react-icons/fi";
+import { FiPlus, FiX, FiCheckCircle, FiTrash2, FiChevronDown, FiArrowLeft } from "react-icons/fi";
 
 
 const AddDepartment = () => {
@@ -120,14 +120,25 @@ const AddDepartment = () => {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-8 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Department Management</h2>
+      {/* <div className="flex justify-between items-center mb-8"> */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-4">
+        <div>
+          {/* <h2 className="text-2xl font-bold text-gray-900">Department Management</h2>
         <button
           onClick={() => navigate("/team/roles")}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
-        >
+          >
           <FiX size={20} />
-        </button>
+          </button> */}
+          <button
+            onClick={() => navigate('/team/roles')}
+            className="cursor-pointer flex items-center gap-2 text-indigo-600 hover:text-indigo-800 mb-4 transition-colors duration-200"
+          >
+            <FiArrowLeft size={18} />
+            <span>Back to Roles</span>
+          </button>
+          <h2 className="text-2xl font-bold text-gray-900">Department Management</h2>
+          </div>
       </div>
 
       {/* Flex Container for Both Forms */}
