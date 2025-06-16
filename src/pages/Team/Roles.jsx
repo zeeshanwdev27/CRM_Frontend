@@ -199,6 +199,13 @@ const Roles = () => {
         </div>
         <div className="flex gap-3">
           <Link
+            to="/team/departments/add"
+            className="flex items-center gap-2 px-5 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <FiPlus size={18} />
+            <span>Add Department</span>
+          </Link>
+          <Link
             to="/team/roles/add"
             className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
           >
@@ -377,7 +384,7 @@ const Roles = () => {
                         className={`transition-all duration-200 p-2 rounded-lg flex items-center justify-center ${
                           role.isSystemRole
                             ? "text-gray-400 cursor-not-allowed"
-                            : "text-rose-600 hover:text-rose-900 hover:bg-rose-50"
+                            : "text-rose-600 hover:text-rose-900 hover:bg-rose-50 cursor-pointer"
                         }`}
                         title={
                           role.isSystemRole
