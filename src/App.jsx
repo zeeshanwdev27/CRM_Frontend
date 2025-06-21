@@ -23,6 +23,8 @@ import AddDepartment from './pages/Team/AddDepartment.jsx';
 import AddContact from "./pages/Contacts/AddContact.jsx"
 import EditContact from "./pages/Contacts/EditContact.jsx"
 
+import AddClient from "./pages/Clients/AddClient.jsx"
+
 
 
 function App() {
@@ -32,7 +34,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-        <Route path="/clients" element={<ProtectedRoute><Layout><Clients /></Layout></ProtectedRoute>} />
         <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
         <Route path="/projects" element={<ProtectedRoute><Layout><AllProjects /></Layout></ProtectedRoute>} />
         <Route path="/team/all-members" element={<ProtectedRoute><Layout><AllMembers /></Layout></ProtectedRoute>} />
@@ -44,6 +45,9 @@ function App() {
         <Route path="/team/departments/add" element={<ProtectedRoute><Layout><AddDepartment /></Layout></ProtectedRoute>} />
         <Route path="/contacts/add" element={<ProtectedRoute><Layout><AddContact /></Layout></ProtectedRoute>} />
         <Route path="/contacts/edit/:id" element={<ProtectedRoute><Layout><EditContact /></Layout></ProtectedRoute>} />
+        <Route path="/clients" element={<ProtectedRoute><Layout><Clients /></Layout></ProtectedRoute>} />
+        <Route path="/clients/add" element={<ProtectedRoute><Layout><AddClient /></Layout></ProtectedRoute>} />
+        <Route path="/clients/add/:id" element={<ProtectedRoute><Layout><AddClient /></Layout></ProtectedRoute>} />
 
 
         <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />

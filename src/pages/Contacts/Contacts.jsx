@@ -15,6 +15,7 @@ import {
   FiStar,
   FiMoreVertical,
   FiAlertCircle,
+  FiUserPlus,
 } from "react-icons/fi";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -143,7 +144,7 @@ const Contacts = () => {
 
       const response = await axios.patch(
         `${API_BASE_URL}/updatestar/${id}`,
-        { starred: !contactToUpdate.starred }, // Use the pre-update value
+        { starred: !contactToUpdate.starred },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -156,9 +157,6 @@ const Contacts = () => {
       }
     } catch (error) {
       console.error("Error updating star status:", error);
-
-      // Revert UI if update fails
-      setContacts(contacts);
       setErrorMessage(error.message || "Failed to update star status");
     }
   };
@@ -241,7 +239,6 @@ const Contacts = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-
       {/* Notification Messages */}
       <div
         ref={notificationRef}
@@ -434,6 +431,9 @@ const Contacts = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Last Contact
                 </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Add to Client
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -506,6 +506,15 @@ const Contacts = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(contact.lastContact).toLocaleDateString()}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                      <Link
+                        to={`/clients/add/${contact._id}`}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      >
+                        <FiUserPlus className="mr-1" />
+                        Convert
+                      </Link>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-center space-x-2">
                         <Link
@@ -520,9 +529,6 @@ const Contacts = () => {
                         >
                           <FiTrash2 />
                         </button>
-                        {/* <button className="text-gray-400 hover:text-gray-600">
-                          <FiMoreVertical />
-                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -530,7 +536,7 @@ const Contacts = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="px-6 py-4 text-center text-sm text-gray-500"
                   >
                     No contacts found matching your criteria
