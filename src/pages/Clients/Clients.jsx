@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   FiSearch,
   FiPlus,
@@ -37,6 +37,14 @@ const Clients = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const tableRef = useRef(null);   //use for auto scroll
+  useEffect(() => {                //use for auto scroll
+    if ((searchTerm || statusFilter !== "all") && tableRef.current) {
+      tableRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [searchTerm, statusFilter]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,6 +107,17 @@ const Clients = () => {
     ],
   };
 
+
+  // Fun for "Enter" event after "Search"
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      // Trigger the search/filter effect
+      if (searchTerm || statusFilter !== "all") {
+        tableRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   const filteredClients = clients.filter((client) => {
     const matchesSearch =
       client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -131,6 +150,7 @@ const Clients = () => {
     }
   };
 
+
   if (loading) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
@@ -148,9 +168,12 @@ const Clients = () => {
       </div>
     );
   }
+  
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+
+      {/* Card Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
           Client Management
@@ -166,6 +189,7 @@ const Clients = () => {
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-white placeholder-gray-500 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
             />
           </div>
           <div className="flex space-x-3">
@@ -192,7 +216,7 @@ const Clients = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats*/}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm font-medium text-gray-500">Total Clients</p>
@@ -271,7 +295,7 @@ const Clients = () => {
       </div>
 
       {/* Clients Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div ref={tableRef} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -320,7 +344,7 @@ const Clients = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200 cursor-pointer">
               {filteredClients.map((client) => (
                 <tr key={client._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -374,12 +398,12 @@ const Clients = () => {
                       : "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">
+                    <Link to={`/clients/edit/${client._id}`} className="inline-flex items-center text-blue-600 hover:text-blue-900 mr-3 cursor-pointer">
                       <FiEdit2 />
-                    </button>
+                    </Link>
                     <button
-                      className="text-red-600 hover:text-red-900"
-                      onClick={() => deleteClient(client.id)}
+                      className="inline-flex items-center text-red-600 hover:text-red-900 cursor-pointer"
+                      onClick={() => deleteClient(client._id)}
                     >
                       <FiTrash2 />
                     </button>
@@ -390,6 +414,9 @@ const Clients = () => {
           </table>
         </div>
       </div>
+
+
+
     </div>
   );
 };

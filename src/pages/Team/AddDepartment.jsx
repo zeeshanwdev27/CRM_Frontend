@@ -6,7 +6,7 @@ import { FiPlus, FiX, FiCheckCircle, FiTrash2, FiChevronDown, FiArrowLeft } from
 
 const AddDepartment = () => {
   const navigate = useNavigate();
-  
+
   // Add Department State
   const [addFormData, setAddFormData] = useState({
     name: "",
@@ -97,6 +97,8 @@ const AddDepartment = () => {
     setLoading(prev => ({...prev, delete: true}));
     setError(prev => ({...prev, delete: null}));
     setSuccess(prev => ({...prev, delete: false}));
+
+  
 
     try {
       const token = localStorage.getItem("token");

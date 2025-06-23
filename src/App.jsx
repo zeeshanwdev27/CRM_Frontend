@@ -24,6 +24,7 @@ import AddContact from "./pages/Contacts/AddContact.jsx"
 import EditContact from "./pages/Contacts/EditContact.jsx"
 
 import AddClient from "./pages/Clients/AddClient.jsx"
+import EditClient from "./pages/Clients/EditClient.jsx"
 
 
 
@@ -48,6 +49,7 @@ function App() {
         <Route path="/clients" element={<ProtectedRoute><Layout><Clients /></Layout></ProtectedRoute>} />
         <Route path="/clients/add" element={<ProtectedRoute><Layout><AddClient /></Layout></ProtectedRoute>} />
         <Route path="/clients/add/:id" element={<ProtectedRoute><Layout><AddClient /></Layout></ProtectedRoute>} />
+        <Route path="/clients/edit/:id" element={<ProtectedRoute><Layout><EditClient /></Layout></ProtectedRoute>} />
 
 
         <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
