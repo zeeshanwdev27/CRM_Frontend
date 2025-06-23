@@ -15,7 +15,7 @@ import {
   FiLayers
 } from 'react-icons/fi';
 
-const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
+const Sidebar = ({ isCollapsed, onToggleCollapse, onNavigate }) => {
   const location = useLocation();
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [hoverStates, setHoverStates] = useState({
@@ -24,6 +24,15 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
   });
   const sidebarRef = useRef(null);
   const contentRef = useRef(null);
+
+  useEffect(() => {
+    setActiveSubmenu(null);
+  }, [location.pathname]);
+
+  const handleLinkClick = () => {
+    onNavigate?.(); // This will close the mobile sidebar
+    setActiveSubmenu(null); // Close any open submenus
+  };
 
   const toggleSubmenu = (menu) => {
     setActiveSubmenu((prev) => (prev === menu ? null : menu));
@@ -157,6 +166,7 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
                           >
                             <Link
                               to={subItem.path}
+                              onClick={handleLinkClick} 
                               className={`flex items-center p-2 pl-3 rounded-lg transition-all duration-150
                                 ${
                                   location.pathname === subItem.path
@@ -178,6 +188,7 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
                 ) : (
                   <Link
                     to={item.path}
+                    onClick={handleLinkClick} 
                     onMouseEnter={() => setHoverStates({ ...hoverStates, main: item.name })}
                     onMouseLeave={() => setHoverStates({ ...hoverStates, main: null })}
                     className={`flex items-center p-3 rounded-lg transition-all duration-200

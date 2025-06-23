@@ -27,6 +27,12 @@ import AddClient from "./pages/Clients/AddClient.jsx"
 import EditClient from "./pages/Clients/EditClient.jsx"
 
 
+const ProtectedLayout = ({ children }) => (
+  <ProtectedRoute>
+    <Layout>{children}</Layout>
+  </ProtectedRoute>
+);
+
 
 function App() {
 
@@ -34,32 +40,34 @@ function App() {
     <>
     <Router>
       <Routes>
-        <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-        <Route path="/contacts" element={<ProtectedRoute><Layout><Contacts /></Layout></ProtectedRoute>} />
-        <Route path="/projects" element={<ProtectedRoute><Layout><AllProjects /></Layout></ProtectedRoute>} />
-        <Route path="/team/all-members" element={<ProtectedRoute><Layout><AllMembers /></Layout></ProtectedRoute>} />
-        <Route path="/team/add" element={<ProtectedRoute><Layout><AddMember /></Layout></ProtectedRoute>} />
-        <Route path="/team/roles" element={<ProtectedRoute><Layout><Roles /></Layout></ProtectedRoute>} />
-        <Route path="/team/roles/add" element={<ProtectedRoute><Layout><CreateRole /></Layout></ProtectedRoute>} />
-        <Route path="/team/edit/:id" element={<ProtectedRoute><Layout><EditMember /></Layout></ProtectedRoute>} />
-        <Route path="/team/roles/edit/:id" element={<ProtectedRoute><Layout><EditRole /></Layout></ProtectedRoute>} />
-        <Route path="/team/departments/add" element={<ProtectedRoute><Layout><AddDepartment /></Layout></ProtectedRoute>} />
-        <Route path="/contacts/add" element={<ProtectedRoute><Layout><AddContact /></Layout></ProtectedRoute>} />
-        <Route path="/contacts/edit/:id" element={<ProtectedRoute><Layout><EditContact /></Layout></ProtectedRoute>} />
-        <Route path="/clients" element={<ProtectedRoute><Layout><Clients /></Layout></ProtectedRoute>} />
-        <Route path="/clients/add" element={<ProtectedRoute><Layout><AddClient /></Layout></ProtectedRoute>} />
-        <Route path="/clients/add/:id" element={<ProtectedRoute><Layout><AddClient /></Layout></ProtectedRoute>} />
-        <Route path="/clients/edit/:id" element={<ProtectedRoute><Layout><EditClient /></Layout></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
+        <Route path="/contacts" element={<ProtectedLayout><Contacts /></ProtectedLayout>} />
+        <Route path="/projects" element={<ProtectedLayout><AllProjects /></ProtectedLayout>} />
+        <Route path="/team/all-members" element={<ProtectedLayout><AllMembers /></ProtectedLayout>} />
+        <Route path="/team/add" element={<ProtectedLayout><AddMember /></ProtectedLayout>} />
+        <Route path="/team/roles" element={<ProtectedLayout><Roles /></ProtectedLayout>} />
+        <Route path="/team/roles/add" element={<ProtectedLayout><CreateRole /></ProtectedLayout>} />
+        <Route path="/team/edit/:id" element={<ProtectedLayout><EditMember /></ProtectedLayout>} />
+        <Route path="/team/roles/edit/:id" element={<ProtectedLayout><EditRole /></ProtectedLayout>} />
+        <Route path="/team/departments/add" element={<ProtectedLayout><AddDepartment /></ProtectedLayout>} />
+        <Route path="/contacts/add" element={<ProtectedLayout><AddContact /></ProtectedLayout>} />
+        <Route path="/contacts/edit/:id" element={<ProtectedLayout><EditContact /></ProtectedLayout>} />
+        <Route path="/clients" element={<ProtectedLayout><Clients /></ProtectedLayout>} />
+        <Route path="/clients/add" element={<ProtectedLayout><AddClient /></ProtectedLayout>} />
+        <Route path="/clients/add/:id" element={<ProtectedLayout><AddClient /></ProtectedLayout>} />
+        <Route path="/clients/edit" element={<ProtectedLayout><EditClient /></ProtectedLayout>} />{/* remove /clients/edit/:id , bcz _id send through url "state"*/}
 
 
-        <Route path="/tasks" element={<ProtectedRoute><Layout><Tasks /></Layout></ProtectedRoute>} />
-        <Route path="/invoices" element={<ProtectedRoute><Layout><Invoices /></Layout></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute><Layout><Reports /></Layout></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
 
-        <Route path='/' element={<SignIn/>}/>
-        <Route path='/signin' element={<SignIn/>}/>
-        <Route path='/logout' element={<LogOut/>}/>
+        <Route path="/tasks" element={<ProtectedLayout><Tasks /></ProtectedLayout>} />
+        <Route path="/invoices" element={<ProtectedLayout><Invoices /></ProtectedLayout>} />
+        <Route path="/reports" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
+        <Route path="/settings" element={<ProtectedLayout><SettingsPage /></ProtectedLayout>} />
+
+
+        <Route path='/' element={<SignIn />} />
+        <Route path='/signin' element={<SignIn />} />
+        <Route path='/logout' element={<LogOut />} />
       </Routes>
     </Router>
     </>

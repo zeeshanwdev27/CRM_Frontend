@@ -17,12 +17,18 @@ const Layout = ({ children }) => {
 
   const toggleCollapse = () => setCollapsed(!collapsed);
 
+  const handleNavigation = () => {
+  setMobileSidebarOpen(false); // Close mobile sidebar on navigation
+  // Optionally also collapse the sidebar on desktop:
+  // setCollapsed(true); // Uncomment if you want desktop sidebar to collapse too
+};
+
   return (
     <div className="flex h-screen w-full bg-gray-100">
       {/* Backdrop */}
       {mobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-transparent z-40 lg:hidden"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
@@ -32,7 +38,7 @@ const Layout = ({ children }) => {
         className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out
         ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
-        <Sidebar isCollapsed={collapsed} onToggleCollapse={toggleCollapse} />
+        <Sidebar isCollapsed={collapsed} onToggleCollapse={toggleCollapse} onNavigate={handleNavigation} />
       </div>
 
       {/* Main Area */}

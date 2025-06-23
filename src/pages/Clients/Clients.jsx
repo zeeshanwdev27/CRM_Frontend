@@ -398,7 +398,7 @@ const Clients = () => {
                       : "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link to={`/clients/edit/${client._id}`} className="inline-flex items-center text-blue-600 hover:text-blue-900 mr-3 cursor-pointer">
+                    <Link to={`/clients/edit`} state={{ id: client._id }} className="inline-flex items-center text-blue-600 hover:text-blue-900 mr-3 cursor-pointer">
                       <FiEdit2 />
                     </Link>
                     <button
