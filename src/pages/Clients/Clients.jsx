@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Link } from "react-router-dom";
+import { Link, useNavigate  } from "react-router-dom";
 import axios from "axios";
 
 // Register ChartJS components
@@ -32,6 +32,8 @@ ChartJS.register(
 );
 
 const Clients = () => {
+  
+  const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -346,7 +348,7 @@ const Clients = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200 cursor-pointer">
               {filteredClients.map((client) => (
-                <tr key={client._id} className="hover:bg-gray-50">
+                <tr key={client._id}  onClick={() => navigate(`/clients/preview`, { state: { id: client._id } })} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -397,7 +399,7 @@ const Clients = () => {
                       ? new Date(client.lastContact).toLocaleDateString()
                       : "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                     <Link to={`/clients/edit`} state={{ id: client._id }} className="inline-flex items-center text-blue-600 hover:text-blue-900 mr-3 cursor-pointer">
                       <FiEdit2 />
                     </Link>

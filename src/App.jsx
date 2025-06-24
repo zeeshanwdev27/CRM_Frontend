@@ -25,6 +25,7 @@ import EditContact from "./pages/Contacts/EditContact.jsx"
 
 import AddClient from "./pages/Clients/AddClient.jsx"
 import EditClient from "./pages/Clients/EditClient.jsx"
+import ClientPreview from "./pages/Clients/ClientPreview.jsx"
 
 
 const ProtectedLayout = ({ children }) => (
@@ -56,6 +57,8 @@ function App() {
         <Route path="/clients/add" element={<ProtectedLayout><AddClient /></ProtectedLayout>} />
         <Route path="/clients/add/:id" element={<ProtectedLayout><AddClient /></ProtectedLayout>} />
         <Route path="/clients/edit" element={<ProtectedLayout><EditClient /></ProtectedLayout>} />{/* remove /clients/edit/:id , bcz _id send through url "state"*/}
+        <Route path="/clients/preview" element={<ProtectedLayout><ClientPreview /></ProtectedLayout>} />
+
 
 
 
