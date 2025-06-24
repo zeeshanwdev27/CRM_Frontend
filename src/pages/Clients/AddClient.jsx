@@ -1,109 +1,116 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  FiUser, 
-  FiMail, 
-  FiBriefcase, 
-  FiDollarSign, 
+import React, { useEffect, useState } from "react";
+import {
+  FiUser,
+  FiMail,
+  FiBriefcase,
+  FiDollarSign,
   FiCalendar,
   FiX,
   FiCheck,
-  FiArrowLeft
-} from 'react-icons/fi';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+  FiArrowLeft,
+} from "react-icons/fi";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 const AddClient = () => {
-  const {id} = useParams()
+  const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
+    name: "",
+    email: "",
+    company: "",
     projects: [],
-    value: '',
-    status: 'active',
-    lastContact: new Date().toISOString().split('T')[0]
+    status: "active",
+    lastContact: new Date().toISOString().split("T")[0],
   });
-  
-  const [newProject, setNewProject] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [newProject, setNewProject] = useState({ name: "", value: "" });
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-  useEffect(()=>{
-    const fetchdata = async()=>{
+  useEffect(() => {
+    const fetchData = async () => {
       if (!id) return;
-      try{
-      const response = await axios.get(`http://localhost:3000/api/clients/add/${id}`)
-      const data = response.data.data.contact;
-      console.log(data);
-      if(data){
-        setFormData({
-          name: data.name || "",
-          email: data.email || "",
-          company: data.company || "",
-          status: data.status || "",
-          projects: [],
-          value: "",
-          lastContact: data.lastContact ? new Date(data.lastContact).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        })
+      try {
+        const response = await axios.get(`http://localhost:3000/api/clients/add/${id}`);
+        const data = response.data.data.contact;
+        if (data) {
+          setFormData({
+            name: data.name || "",
+            email: data.email || "",
+            company: data.company || "",
+            projects: data.projects || [],
+            status: data.status || "active",
+            lastContact: data.lastContact
+              ? new Date(data.lastContact).toISOString().split("T")[0]
+              : new Date().toISOString().split("T")[0],
+          });
+        }
+      } catch (err) {
+        setErrorMessage(err.response?.data?.message || "Failed to load client");
       }
-    }catch(err) {
-        setErrorMessage(err.response?.data?.message || 'Failed to load contact');
-      }
-    }
-    fetchdata()
-  },[id])
+    };
+    fetchData();
+  }, [id]);
 
-  
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
+    }));
+  };
+
+  const handleProjectChange = (e) => {
+    const { name, value } = e.target;
+    setNewProject((prev) => ({
+      ...prev,
+      [name]: name === "value" ? value.replace(/[^0-9.]/g, "") : value, // Strip non-numeric for value
     }));
   };
 
   const handleProjectAdd = () => {
-    if (newProject.trim() && !formData.projects.includes(newProject.trim())) {
-      setFormData(prev => ({
+    if (newProject.name.trim() && newProject.value) {
+      setFormData((prev) => ({
         ...prev,
-        projects: [...prev.projects, newProject.trim()]
+        projects: [...prev.projects, { name: newProject.name.trim(), value: parseFloat(newProject.value) || 0 }],
       }));
-      setNewProject('');
+      setNewProject({ name: "", value: "" });
     }
   };
 
-  const handleProjectRemove = (projectToRemove) => {
-    setFormData(prev => ({
+  const handleProjectRemove = (index) => {
+    setFormData((prev) => ({
       ...prev,
-      projects: prev.projects.filter(project => project !== projectToRemove)
+      projects: prév.projects.filter((_, i) => i !== index),
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("No authentication token found");
       }
 
-      const response = await axios.post("http://localhost:3000/api/clients/add", formData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+      const response = await axios.post(
+        "http://localhost:3000/api/clients/add",
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
-      setSuccessMessage('Client added successfully!');
+      setSuccessMessage("Client added successfully!");
       setTimeout(() => {
-        navigate('/clients');
+        navigate("/clients");
       }, 2000);
-
     } catch (error) {
       let errorMsg = "Failed to add client";
       if (error.response) {
@@ -111,19 +118,27 @@ const AddClient = () => {
       } else if (error.request) {
         errorMsg = "No response from server";
       }
-      setErrorMessage(error.response);
+      setErrorMessage(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const formatCurrency = (value) => {
+    const amount = parseFloat(value) || 0;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
   };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Add New Client</h1>
-          <Link 
-            to="/clients" 
+          <h1 className="text-2xl font-bold text-gray-800">{id ? "Edit Client" : "Add New Client"}</h1>
+          <Link
+            to="/clients"
             className="cursor-pointer flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors duration-200"
           >
             <FiArrowLeft size={18} />
@@ -210,28 +225,6 @@ const AddClient = () => {
               </div>
             </div>
 
-            {/* Project Value */}
-            <div className="space-y-2">
-              <label htmlFor="value" className="block text-sm font-medium text-gray-700">
-                Project Value <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiDollarSign className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  id="value"
-                  name="value"
-                  required
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="$4,250"
-                  value={formData.value}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
             {/* Status */}
             <div className="space-y-2">
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">
@@ -271,19 +264,19 @@ const AddClient = () => {
 
             {/* Projects - Tag-like Interface */}
             <div className="space-y-2 md:col-span-2">
-              <label htmlFor="projects" className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700">
                 Projects <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
-                {formData.projects.map(project => (
-                  <span 
-                    key={project} 
+                {formData.projects.map((project, index) => (
+                  <span
+                    key={index}
                     className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
                   >
-                    {project}
-                    <button 
+                    {project.name} ({formatCurrency(project.value)})
+                    <button
                       type="button"
-                      onClick={() => handleProjectRemove(project)}
+                      onClick={() => handleProjectRemove(index)}
                       className="ml-1.5 inline-flex text-purple-500 hover:text-purple-700"
                     >
                       <FiX className="h-3 w-3" />
@@ -291,16 +284,30 @@ const AddClient = () => {
                   </span>
                 ))}
               </div>
-              <div className="flex">
+              <div className="flex space-x-2">
                 <input
                   type="text"
-                  id="newProject"
+                  name="name"
                   className="block w-full px-3 py-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Add a project (e.g., Ecommerce Website)"
-                  value={newProject}
-                  onChange={(e) => setNewProject(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleProjectAdd())}
+                  placeholder="Project name (e.g., Ecommerce Website)"
+                  value={newProject.name}
+                  onChange={handleProjectChange}
+                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleProjectAdd())}
                 />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiDollarSign className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="value"
+                    className="block w-32 pl-10 pr-3 py-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="1000"
+                    value={newProject.value}
+                    onChange={handleProjectChange}
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleProjectAdd())}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleProjectAdd}
@@ -313,10 +320,10 @@ const AddClient = () => {
           </div>
 
           <div className="flex justify-end space-x-3">
-            <Link 
-              to="/clients" 
+            <Link
+              to="/clients"
               className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-            >
+           >
               Cancel
             </Link>
             <button
@@ -325,7 +332,7 @@ const AddClient = () => {
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {isSubmitting ? (
-                'Saving...'
+                "Saving..."
               ) : (
                 <>
                   <FiCheck className="mr-2" />

@@ -12,12 +12,8 @@ import {
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
-
-
 const EditClient = () => {
-
   // Router hooks
-  // const { id } = useParams();
   const { state } = useLocation();
   const clientId = state?.id;
   const navigate = useNavigate();
@@ -28,11 +24,10 @@ const EditClient = () => {
     email: '',
     company: '',
     projects: [],
-    value: '',
     status: 'active',
     lastContact: new Date().toISOString().split('T')[0]
   });
-  const [newProject, setNewProject] = useState('');
+  const [newProject, setNewProject] = useState({ name: '', value: '' });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,15 +35,19 @@ const EditClient = () => {
   // Memoized fetch function
   const fetchClient = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/clients/${clientId}`);
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Authentication required');
+
+      const response = await axios.get(`http://localhost:3000/api/clients/${clientId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const { client } = response.data.data;
-      
+
       setFormData({
         name: client.name || '',
         email: client.email || '',
         company: client.company || '',
         projects: client.projects || [],
-        value: client.value || '',
         status: client.status || 'active',
         lastContact: client.lastContact 
           ? new Date(client.lastContact).toISOString().split('T')[0] 
@@ -70,20 +69,31 @@ const EditClient = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleProjectChange = (e) => {
+    const { name, value } = e.target;
+    setNewProject(prev => ({
+      ...prev,
+      [name]: name === 'value' ? value.replace(/[^0-9.]/g, '') : value
+    }));
+  };
+
   const handleProjectAdd = () => {
-    if (newProject.trim() && !formData.projects.includes(newProject.trim())) {
+    if (newProject.name.trim() && newProject.value) {
       setFormData(prev => ({
         ...prev,
-        projects: [...prev.projects, newProject.trim()]
+        projects: [...prev.projects, { 
+          name: newProject.name.trim(), 
+          value: parseFloat(newProject.value) || 0 
+        }]
       }));
-      setNewProject('');
+      setNewProject({ name: '', value: '' });
     }
   };
 
-  const handleProjectRemove = (projectToRemove) => {
+  const handleProjectRemove = (index) => {
     setFormData(prev => ({
       ...prev,
-      projects: prev.projects.filter(project => project !== projectToRemove)
+      projects: prev.projects.filter((_, i) => i !== index)
     }));
   };
 
@@ -119,6 +129,14 @@ const EditClient = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const formatCurrency = (value) => {
+    const amount = parseFloat(value) || 0;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
   };
 
   return (
@@ -217,28 +235,6 @@ const EditClient = () => {
               </div>
             </div>
 
-            {/* Value Field */}
-            <div className="space-y-2">
-              <label htmlFor="value" className="block text-sm font-medium text-gray-700">
-                Project Value <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiDollarSign className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  id="value"
-                  name="value"
-                  required
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="$4,250"
-                  value={formData.value}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
             {/* Status Field */}
             <div className="space-y-2">
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">
@@ -278,19 +274,19 @@ const EditClient = () => {
 
             {/* Projects Field */}
             <div className="space-y-2 md:col-span-2">
-              <label htmlFor="projects" className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700">
                 Projects <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
-                {formData.projects.map(project => (
+                {formData.projects.map((project, index) => (
                   <span 
-                    key={project} 
+                    key={index} 
                     className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
                   >
-                    {project}
+                    {project.name} ({formatCurrency(project.value)})
                     <button 
                       type="button"
-                      onClick={() => handleProjectRemove(project)}
+                      onClick={() => handleProjectRemove(index)}
                       className="ml-1.5 inline-flex text-purple-500 hover:text-purple-700"
                     >
                       <FiX className="h-3 w-3" />
@@ -298,16 +294,30 @@ const EditClient = () => {
                   </span>
                 ))}
               </div>
-              <div className="flex">
+              <div className="flex space-x-2">
                 <input
                   type="text"
-                  id="newProject"
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Add a project"
-                  value={newProject}
-                  onChange={(e) => setNewProject(e.target.value)}
+                  name="name"
+                  className="block cleanslate w-full px-3 py-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Project name (e.g., Ecommerce Website)"
+                  value={newProject.name}
+                  onChange={handleProjectChange}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleProjectAdd())}
                 />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiDollarSign className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    name="value"
+                    className="block w-32 pl-10 pr-3 py-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="1000"
+                    value={newProject.value}
+                    onChange={handleProjectChange}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleProjectAdd())}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleProjectAdd}

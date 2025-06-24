@@ -18,21 +18,13 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Link, useNavigate  } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Clients = () => {
-  
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,13 +32,12 @@ const Clients = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const tableRef = useRef(null);   //use for auto scroll
-  useEffect(() => {                //use for auto scroll
+  const tableRef = useRef(null);
+  useEffect(() => {
     if ((searchTerm || statusFilter !== "all") && tableRef.current) {
       tableRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [searchTerm, statusFilter]);
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,18 +45,11 @@ const Clients = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No authentication token found");
 
-        const response = await axios.get(
-          "http://localhost:3000/api/clients/getclients",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get("http://localhost:3000/api/clients/getclients", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        if (
-          response.data &&
-          response.data.data &&
-          response.data.data.getClients
-        ) {
+        if (response.data && response.data.data && response.data.data.getClients) {
           setClients(response.data.data.getClients);
         } else {
           throw new Error("Invalid data format received");
@@ -81,39 +65,26 @@ const Clients = () => {
     fetchData();
   }, []);
 
-  // Helper function to parse currency values
-  const parseCurrency = (value) => {
-    if (typeof value === "number") {
-      return value; // If it's already a number, return as-is
-    }
-    if (typeof value === "string") {
-      // Remove all non-digit characters except decimal point
-      const numericString = value.replace(/[^0-9.]/g, "");
-      // Parse as float and round to 2 decimal places to avoid floating point issues
-      const parsedValue = parseFloat(numericString);
-      return isNaN(parsedValue) ? 0 : parseFloat(parsedValue.toFixed(2));
-    }
-    return 0; // Fallback for any other type
+  // Helper function to calculate total project value
+  const calculateTotalValue = (projects) => {
+    return projects.reduce((sum, project) => sum + (project.value || 0), 0);
   };
 
-  // Chart data - showing actual dollar values (not divided by 1000)
+  // Chart data
   const revenueData = {
     labels: clients.map((client) => client.name),
     datasets: [
       {
         label: "Project Value ($)",
-        data: clients.map((client) => parseCurrency(client.value)),
+        data: clients.map((client) => calculateTotalValue(client.projects)),
         backgroundColor: "#6366F1",
         borderRadius: 6,
       },
     ],
   };
 
-
-  // Fun for "Enter" event after "Search"
   const handleSearchKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      // Trigger the search/filter effect
+    if (e.key === "Enter") {
       if (searchTerm || statusFilter !== "all") {
         tableRef.current?.scrollIntoView({ behavior: "smooth" });
       }
@@ -123,14 +94,13 @@ const Clients = () => {
   const filteredClients = clients.filter((client) => {
     const matchesSearch =
       client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.contact?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || client.status === statusFilter;
+      client.company?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || client.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const formatCurrency = (value) => {
-    const amount = parseCurrency(value);
+    const amount = parseFloat(value) || 0;
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -140,25 +110,19 @@ const Clients = () => {
   const deleteClient = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(
-        `http://localhost:3000/api/clients/deleteclient/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.delete(`http://localhost:3000/api/clients/deleteclient/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setClients(clients.filter((client) => client._id !== id));
     } catch (error) {
       console.error("Error deleting client:", error);
     }
   };
 
-
   if (loading) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="text-lg font-medium text-gray-700">
-          Loading clients...
-        </div>
+        <div className="text-lg font-medium text-gray-700">Loading clients...</div>
       </div>
     );
   }
@@ -170,16 +134,12 @@ const Clients = () => {
       </div>
     );
   }
-  
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-
       {/* Card Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
-          Client Management
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Client Management</h1>
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
           <div className="relative flex-1 sm:flex-none sm:w-64">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -218,13 +178,11 @@ const Clients = () => {
         </div>
       </div>
 
-      {/* Stats*/}
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm font-medium text-gray-500">Total Clients</p>
-          <p className="text-2xl font-bold mt-1 text-gray-800">
-            {clients.length}
-          </p>
+          <p className="text-2xl font-bold mt-1 text-gray-800">{clients.length}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm font-medium text-gray-500">Active Clients</p>
@@ -235,30 +193,20 @@ const Clients = () => {
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm font-medium text-gray-500">Total Projects</p>
           <p className="text-2xl font-bold mt-1 text-purple-600">
-            {clients.reduce(
-              (sum, client) => sum + (client.projects?.length || 0),
-              0
-            )}
+            {clients.reduce((sum, client) => sum + (client.projects?.length || 0), 0)}
           </p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
           <p className="text-sm font-medium text-gray-500">Total Value</p>
           <p className="text-2xl font-bold mt-1 text-green-600">
-            {formatCurrency(
-              clients.reduce(
-                (sum, client) => sum + parseCurrency(client.value),
-                0
-              )
-            )}
+            {formatCurrency(clients.reduce((sum, client) => sum + calculateTotalValue(client.projects), 0))}
           </p>
         </div>
       </div>
 
       {/* Chart */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Client Project Values
-        </h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Client Project Values</h2>
         <div className="h-64">
           <Bar
             data={revenueData}
@@ -324,7 +272,7 @@ const Clients = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Value
+                  Total Value
                 </th>
                 <th
                   scope="col"
@@ -348,26 +296,24 @@ const Clients = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200 cursor-pointer">
               {filteredClients.map((client) => (
-                <tr key={client._id}  onClick={() => navigate(`/clients/preview`, { state: { id: client._id } })} className="hover:bg-gray-50">
+                <tr
+                  key={client._id}
+                  onClick={() => navigate(`/clients/preview`, { state: { id: client._id } })}
+                  className="hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                         <FiUser className="text-blue-600" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {client.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {client.email}
-                        </div>
+                        <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                        <div className="text-sm text-gray-500">{client.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {client.company}
-                    </div>
+                    <div className="text-sm text-gray-900">{client.company}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -375,23 +321,17 @@ const Clients = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {parseCurrency(client.value) === 0 ? (
-                      <span className="text-gray-400">{formatCurrency(0)}</span>
-                    ) : (
-                      formatCurrency(client.value)
-                    )}
+                    {formatCurrency(calculateTotalValue(client.projects))}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                      ${
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         client.status === "active"
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {client.status.charAt(0).toUpperCase() +
-                        client.status.slice(1)}
+                      {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -399,8 +339,15 @@ const Clients = () => {
                       ? new Date(client.lastContact).toLocaleDateString()
                       : "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
-                    <Link to={`/clients/edit`} state={{ id: client._id }} className="inline-flex items-center text-blue-600 hover:text-blue-900 mr-3 cursor-pointer">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link
+                      to={`/clients/edit`}
+                      state={{ id: client._id }}
+                      className="inline-flex items-center text-blue-600 hover:text-blue-900 mr-3 cursor-pointer"
+                    >
                       <FiEdit2 />
                     </Link>
                     <button
@@ -416,9 +363,6 @@ const Clients = () => {
           </table>
         </div>
       </div>
-
-
-
     </div>
   );
 };

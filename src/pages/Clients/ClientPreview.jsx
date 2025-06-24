@@ -27,6 +27,8 @@ const ClientPreview = () => {
     const fetchClient = async () => {
       try {
         const token = localStorage.getItem("token");
+        if (!token) throw new Error("Authentication required");
+
         const response = await axios.get(
           `http://localhost:3000/api/clients/${clientId}`,
           {
@@ -45,13 +47,17 @@ const ClientPreview = () => {
   }, [clientId]);
 
   const formatCurrency = (value) => {
-    const amount = typeof value === "number" ? value : parseFloat(value) || 0;
+    const amount = parseFloat(value) || 0;
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(amount);
+  };
+
+  const calculateTotalValue = (projects) => {
+    return projects.reduce((sum, project) => sum + (project.value || 0), 0);
   };
 
   if (loading)
@@ -121,12 +127,10 @@ const ClientPreview = () => {
                   {client.status?.charAt(0)?.toUpperCase() +
                     client.status?.slice(1)}
                 </span>
-                {client.value && (
-                  <span className="flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
-                    <FiDollarSign className="mr-1" />
-                    {formatCurrency(client.value)}
-                  </span>
-                )}
+                <span className="flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                  <FiDollarSign className="mr-1" />
+                  {formatCurrency(calculateTotalValue(client.projects || []))}
+                </span>
               </div>
             </div>
           </div>
@@ -203,24 +207,14 @@ const ClientPreview = () => {
                     key={index}
                     className="bg-gray-50 rounded-lg p-3 border border-gray-200"
                   >
-                    {typeof project === "string" ? (
-                      <div className="mb-2">
-                        <p className="font-medium bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                          {project}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="mb-2">
-                        <p className="font-medium bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                          {project.name}
-                        </p>
-                        {project.description && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            {project.description}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex justify-between">
+                      <p className="font-medium bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                        {project.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {formatCurrency(project.value)}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -282,7 +276,7 @@ const ClientPreview = () => {
                   Total Project Value
                 </h3>
                 <p className="text-2xl font-bold text-blue-900">
-                  {formatCurrency(client.value || 0)}
+                  {formatCurrency(calculateTotalValue(client.projects || []))}
                 </p>
               </div>
             </div>
